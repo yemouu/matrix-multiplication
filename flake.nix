@@ -13,8 +13,9 @@
       formatter = forSystems (pkgs: pkgs.nixfmt-tree.override { settings.formatter.nixfmt.options = [ "-w 120" ]; });
 
       devShells = forSystems (pkgs: {
-        default = pkgs.mkShell {
+        default = (pkgs.mkShell.override { stdenv = with pkgs; overrideCC stdenv pkgs.llvmPackages_latest.stdenv; }) {
           buildInputs = with pkgs; [
+            bear
             clang-tools
             llvmPackages_latest.clang
           ];

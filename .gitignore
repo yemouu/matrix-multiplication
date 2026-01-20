@@ -1,2 +1,4 @@
-*.out
-matrix
+*.o
+.cache
+compile_commands.json
+matrix-multiplication
