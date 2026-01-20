@@ -64,11 +64,17 @@ int main(int argc, char **argv) {
   print_matrix(matrix_b, k, n);
   printf("\n");
 
+  const clock_t begin = clock();
   multiply_matrices(matrix_a, m, matrix_b, n, k, matrix_c);
+  const clock_t end = clock();
+
+  const double elapsed_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
   printf("Matrix C:\n");
   print_matrix(matrix_c, m, n);
   printf("\n");
+
+  printf("Elapsed Time: %fs\n", elapsed_time);
 
   free_matrix(matrix_a, m);
   free_matrix(matrix_b, k);
