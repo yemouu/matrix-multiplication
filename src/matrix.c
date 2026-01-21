@@ -41,8 +41,7 @@ void print_matrix(int **matrix, size_t rows, size_t columns) {
   }
 }
 
-void multiply_matrices(int **matrix_a, size_t a_rows, int **matrix_b,
-                       size_t b_columns, size_t shared, int **result) {
+void multiply_matrices(int **matrix_a, size_t a_rows, int **matrix_b, size_t b_columns, size_t shared, int **result) {
   for (size_t s = 0; s < shared; s++)
     for (size_t row = 0; row < a_rows; row++)
       for (size_t column = 0; column < b_columns; column++)
