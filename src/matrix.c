@@ -1,3 +1,5 @@
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,6 +48,15 @@ void multiply_matrices(int **matrix_a, size_t a_rows, int **matrix_b,
       for (size_t column = 0; column < b_columns; column++)
         result[row][column] += matrix_a[row][s] * matrix_b[s][column];
 }
+
+bool compare_matrices(int **matrix_a, int **matrix_b, size_t rows, size_t columns) {
+  for (size_t row = 0; row < rows; row++)
+    for (size_t column = 0; column < columns; column++)
+      if (matrix_a[row][column] != matrix_b[row][column])
+        return false;
+
+  return true;
+};
 
 void free_matrix(int **matrix, size_t rows) {
   if (matrix == NULL)
