@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <getopt.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,7 @@
 #include <time.h>
 
 #include "matrix.h"
+#include "strassen.h"
 
 typedef enum { GEMM, STRASSEN, COPPERSMITH_WINOGRAD } algorithm;
 
@@ -149,9 +151,33 @@ int main(int argc, char **argv) {
     end = clock();
     break;
   case STRASSEN:
+    if ((m != n || m != k) && ((m & (m - 1)) == 0)) {
+      fprintf(stderr, "For the Strassen algorithm, the matrices should be the"
+                      "same size and m, n, and k should be a power of 2.\n");
+      exit(1);
+    }
 
     begin = clock();
+    strassen_algorithm(matrix_a, matrix_b, matrix_d, m);
     end = clock();
+
+    multiply_matrices(matrix_a, m, matrix_b, n, k, matrix_c);
+    if (!compare_matrices(matrix_c, matrix_d, m, n)) {
+      fprintf(stderr, "Error: Multiplication from strassen algorithm returned an unexpected result\n");
+
+      if (debug) {
+        printf("Matrix C:\n");
+        print_matrix(matrix_c, m, n);
+        printf("\n");
+
+        printf("Matrix D:\n");
+        print_matrix(matrix_d, m, n);
+        printf("\n");
+      }
+
+      exit(1);
+    }
+
     break;
   case COPPERSMITH_WINOGRAD:
     begin = clock();
