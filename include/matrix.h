@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef matrix_h_INCLUDE
+#define matrix_h_INCLUDE
 
 #include <stddef.h>
 
@@ -14,4 +14,4 @@ void print_matrix(int **matrix, size_t rows, size_t columns);
 
 void free_matrix(int **matrix, size_t rows);
 
-#endif
+#endif // matrix_h_INCLUDE
