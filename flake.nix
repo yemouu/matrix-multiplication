@@ -17,6 +17,7 @@
           buildInputs = with pkgs; [
             bear
             clang-tools
+            lldb
             llvmPackages_latest.clang
           ];
         };
