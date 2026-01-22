@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
     if ((m != n || m != k) && ((m & (m - 1)) == 0)) {
       fprintf(stderr, "For the Strassen algorithm, the matrices should be the"
                       "same size and m, n, and k should be a power of 2.\n");
-      exit(1);
+      return 1;
     }
 
     begin = clock();
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
         printf("\n");
       }
 
-      exit(1);
+      return 1;
     }
 
     break;
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     print_matrix(matrix_c, m, n);
     printf("\n");
 
-    if (matrix_d != NULL) {
+    if (algo != GEMM) {
       printf("Matrix D:\n");
       print_matrix(matrix_d, m, n);
       printf("\n");
@@ -211,8 +211,8 @@ int main(int argc, char **argv) {
   free_matrix(matrix_b, k);
   free_matrix(matrix_c, m);
 
-  if (matrix_d != NULL)
-    free_matrix(matrix_d, m);
+  if (algo != GEMM)
+    free_matrix(&d);
 
   return 0;
 }
