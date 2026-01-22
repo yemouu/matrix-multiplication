@@ -2,34 +2,86 @@
 
 #include "matrix.h"
 
-void matrix_add(int **matrix_a, size_t offset_a, size_t voffset_a, int **matrix_b, size_t offset_b, size_t voffset_b,
-                int **matrix_c, size_t offset_c, size_t voffset_c, size_t size) {
-  for (size_t row = 0; row < size; row++)
-    for (size_t column = 0; column < size; column++)
-      matrix_c[offset_c + row][voffset_c + column] =
-          matrix_a[offset_a + row][voffset_a + column] + matrix_b[offset_b + row][voffset_b + column];
+Matrix create_matrix_offset(Matrix *matrix, size_t row_offset, size_t column_offset, size_t size) {
+  Matrix result = {.values = matrix->values,
+                   .rows = matrix->rows,
+                   .columns = matrix->columns,
+                   .row_offset = row_offset,
+                   .row_offset_size = size,
+                   .column_offset = column_offset,
+                   .column_offset_size = size};
+  return result;
 }
 
-void matrix_subtract(int **matrix_a, size_t offset_a, size_t voffset_a, int **matrix_b, size_t offset_b,
-                     size_t voffset_b, int **matrix_c, size_t offset_c, size_t voffset_c, size_t size) {
-  for (size_t row = 0; row < size; row++)
-    for (size_t column = 0; column < size; column++)
-      matrix_c[offset_c + row][voffset_c + column] =
-          matrix_a[offset_a + row][voffset_a + column] - matrix_b[offset_b + row][voffset_b + column];
+void matrix_add(Matrix *a, Matrix *b, Matrix *c) {
+  size_t row_size = 0;
+  size_t column_size = 0;
+
+  if (a->row_offset_size != 0)
+    row_size = a->row_offset_size;
+  else if (b->row_offset_size != 0)
+    row_size = a->row_offset_size;
+  else if (c->row_offset_size != 0)
+    row_size = c->row_offset_size;
+  else
+    row_size = c->rows;
+
+  if (a->column_offset_size != 0)
+    column_size = a->column_offset_size;
+  else if (b->column_offset_size != 0)
+    column_size = a->column_offset_size;
+  else if (c->column_offset_size != 0)
+    column_size = c->column_offset_size;
+  else
+    column_size = c->columns;
+
+  for (size_t row = 0; row < row_size; row++)
+    for (size_t column = 0; column < column_size; column++)
+      c->values[(c->row_offset + row) * c->columns + (c->column_offset + column)] =
+          a->values[(a->row_offset + row) * a->columns + (a->column_offset + column)] +
+          b->values[(b->row_offset + row) * b->columns + (b->column_offset + column)];
 }
 
-void strassen_multiply_matrices(int **matrix_a, size_t offset_a, size_t voffset_a, int **matrix_b, size_t offset_b,
-                                size_t voffset_b, int **matrix_c, size_t offset_c, size_t voffset_c) {
+void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
+  size_t row_size = 0;
+  size_t column_size = 0;
 
-  const int a11 = matrix_a[offset_a][voffset_a];
-  const int a12 = matrix_a[offset_a][voffset_a + 1];
-  const int a21 = matrix_a[offset_a + 1][voffset_a];
-  const int a22 = matrix_a[offset_a + 1][voffset_a + 1];
+  if (a->row_offset_size != 0)
+    row_size = a->row_offset_size;
+  else if (b->row_offset_size != 0)
+    row_size = a->row_offset_size;
+  else if (c->row_offset_size != 0)
+    row_size = c->row_offset_size;
+  else
+    row_size = c->rows;
 
-  const int b11 = matrix_b[offset_b][voffset_b];
-  const int b12 = matrix_b[offset_b][voffset_b + 1];
-  const int b21 = matrix_b[offset_b + 1][voffset_b];
-  const int b22 = matrix_b[offset_b + 1][voffset_b + 1];
+  if (a->column_offset_size != 0)
+    column_size = a->column_offset_size;
+  else if (b->column_offset_size != 0)
+    column_size = a->column_offset_size;
+  else if (c->column_offset_size != 0)
+    column_size = c->column_offset_size;
+  else
+    column_size = c->columns;
+
+  for (size_t row = 0; row < row_size; row++)
+    for (size_t column = 0; column < column_size; column++)
+      c->values[(c->row_offset + row) * c->columns + (c->column_offset + column)] =
+          a->values[(a->row_offset + row) * a->columns + (a->column_offset + column)] -
+          b->values[(b->row_offset + row) * b->columns + (b->column_offset + column)];
+}
+
+void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
+
+  const int a11 = a->values[(a->row_offset) * a->rows + (a->column_offset)];
+  const int a12 = a->values[(a->row_offset) * a->rows + (a->column_offset + 1)];
+  const int a21 = a->values[(a->row_offset + 1) * a->rows + (a->column_offset)];
+  const int a22 = a->values[(a->row_offset + 1) * a->rows + (a->column_offset + 1)];
+
+  const int b11 = b->values[(b->row_offset) * b->rows + (b->column_offset)];
+  const int b12 = b->values[(b->row_offset) * b->rows + (b->column_offset + 1)];
+  const int b21 = b->values[(b->row_offset + 1) * b->rows + (b->column_offset)];
+  const int b22 = b->values[(b->row_offset + 1) * b->rows + (b->column_offset + 1)];
 
   const int m1 = (a11 + a22) * (b11 + b22);
   const int m2 = (a21 + a22) * b11;
@@ -39,45 +91,34 @@ void strassen_multiply_matrices(int **matrix_a, size_t offset_a, size_t voffset_
   const int m6 = (a21 - a11) * (b11 + b12);
   const int m7 = (a12 - a22) * (b21 + b22);
 
-  matrix_c[offset_c][voffset_c] = m1 + m4 - m5 + m7;
-  matrix_c[offset_c][voffset_c + 1] = m3 + m5;
-  matrix_c[offset_c + 1][voffset_c] = m2 + m4;
-  matrix_c[offset_c + 1][voffset_c + 1] = m1 - m2 + m3 + m6;
+  c->values[(c->row_offset) * c->rows + (c->column_offset)] = m1 + m4 - m5 + m7;
+  c->values[(c->row_offset) * c->rows + (c->column_offset + 1)] = m3 + m5;
+  c->values[(c->row_offset + 1) * c->rows + (c->column_offset)] = m2 + m4;
+  c->values[(c->row_offset + 1) * c->rows + (c->column_offset + 1)] = m1 - m2 + m3 + m6;
 }
 
-void _strassen_algorithm(int **matrix_a, size_t offset_a, size_t voffset_a, int **matrix_b, size_t offset_b,
-                         size_t voffset_b, int **matrix_c, size_t offset_c, size_t voffset_c, size_t size) {
-  if (size == 2) {
-    strassen_multiply_matrices(matrix_a, offset_a, voffset_a, matrix_b, offset_b, voffset_b, matrix_c, offset_c,
-                               voffset_c);
+void strassen(Matrix *a, Matrix *b, Matrix *c) {
+  if (c->rows == 2) {
+    base_strassen(a, b, c);
     return;
   }
 
-  const size_t new_size = size / 2;
+  const size_t size = c->rows / 2;
 
-  const size_t new_offset_a = offset_a + new_size;
-  const size_t new_voffset_a = voffset_a + new_size;
+  Matrix a11 = create_matrix_offset(a, a->row_offset, a->column_offset, size);
+  Matrix a12 = create_matrix_offset(a, a->row_offset, a->column_offset + size, size);
+  Matrix a21 = create_matrix_offset(a, a->row_offset + size, a->column_offset, size);
+  Matrix a22 = create_matrix_offset(a, a->row_offset + size, a->column_offset + size, size);
 
-  const size_t new_offset_b = offset_b + new_size;
-  const size_t new_voffset_b = voffset_b + new_size;
+  Matrix b11 = create_matrix_offset(b, b->row_offset, b->column_offset, size);
+  Matrix b12 = create_matrix_offset(b, b->row_offset, b->column_offset + size, size);
+  Matrix b21 = create_matrix_offset(b, b->row_offset + size, b->column_offset, size);
+  Matrix b22 = create_matrix_offset(b, b->row_offset + size, b->column_offset + size, size);
 
-  const size_t new_offset_c = offset_c + new_size;
-  const size_t new_voffset_c = voffset_c + new_size;
-
-  // a11 = matrix_a offset     voffset     size
-  // a12 = matrix_a offset     new_voffset size
-  // a21 = matrix_a new_offset voffset     size
-  // a22 = matrix_a new_offset new_voffset size
-
-  // b11 = matrix_b offset     voffset     size
-  // b12 = matrix_b offset     new_voffset size
-  // b21 = matrix_b new_offset voffset     size
-  // b22 = matrix_b new_offset new_voffset size
-
-  // c11 = matrix_c offset     voffset     size
-  // c12 = matrix_c offset     new_voffset size
-  // c21 = matrix_c new_offset voffset     size
-  // c22 = matrix_c new_offset new_voffset size
+  Matrix c11 = create_matrix_offset(c, c->row_offset, c->column_offset, size);
+  Matrix c12 = create_matrix_offset(c, c->row_offset, c->column_offset + size, size);
+  Matrix c21 = create_matrix_offset(c, c->row_offset + size, c->column_offset, size);
+  Matrix c22 = create_matrix_offset(c, c->row_offset + size, c->column_offset + size, size);
 
   // TODO: Try and figure out a way to do this with less memory allocations
   // const int m1 = (a11 + a22) * (b11 + b22);
@@ -88,68 +129,63 @@ void _strassen_algorithm(int **matrix_a, size_t offset_a, size_t voffset_a, int 
   // const int m6 = (a21 - a11) * (b11 + b12);
   // const int m7 = (a12 - a22) * (b21 + b22);
 
-  // These are used as temporary matricies for the addition and subtraction we do
-  int **left = NULL, **right = NULL;
-  int **m1 = NULL, **m2 = NULL, **m3 = NULL, **m4 = NULL, **m5 = NULL, **m6 = NULL, **m7 = NULL;
+  // TODO: Try and combine these temporary matricies into one big matrix and use offsets to access each 'matrix'
+  Matrix left = initialize_matrix(size, size);
+  Matrix right = initialize_matrix(size, size);
+  Matrix m1 = initialize_matrix(size, size);
+  Matrix m2 = initialize_matrix(size, size);
+  Matrix m3 = initialize_matrix(size, size);
+  Matrix m4 = initialize_matrix(size, size);
+  Matrix m5 = initialize_matrix(size, size);
+  Matrix m6 = initialize_matrix(size, size);
+  Matrix m7 = initialize_matrix(size, size);
 
-  initialize_matrix(&left, new_size, new_size);
-  initialize_matrix(&right, new_size, new_size);
+  // TODO: Instead of doing the addition and subtraction outside of the, consider making the addition and subtraction
+  //       functions return a pointer to the result
+  matrix_add(&a11, &a22, &left);
+  matrix_add(&b11, &b22, &right);
+  strassen(&left, &right, &m1);
 
-  // TODO: make simplified functions for addition/subtraction/multiplication that assume the offset is zero
-  initialize_matrix(&m1, new_size, new_size);
-  matrix_add(matrix_a, offset_a, voffset_a, matrix_a, new_offset_a, new_voffset_a, left, 0, 0, new_size);
-  matrix_add(matrix_b, offset_b, voffset_b, matrix_b, new_offset_b, new_voffset_b, right, 0, 0, new_size);
-  _strassen_algorithm(left, 0, 0, right, 0, 0, m1, 0, 0, new_size);
+  matrix_add(&a21, &a22, &left);
+  strassen(&left, &b11, &m2);
 
-  initialize_matrix(&m2, new_size, new_size);
-  matrix_add(matrix_a, new_offset_a, offset_a, matrix_a, new_offset_a, new_voffset_a, left, 0, 0, new_size);
-  _strassen_algorithm(left, 0, 0, matrix_b, offset_b, voffset_b, m2, 0, 0, new_size);
+  matrix_subtract(&b12, &b22, &right);
+  strassen(&a11, &right, &m3);
 
-  initialize_matrix(&m3, new_size, new_size);
-  matrix_subtract(matrix_b, offset_b, new_voffset_b, matrix_b, new_offset_b, new_voffset_b, right, 0, 0, new_size);
-  _strassen_algorithm(matrix_a, offset_a, voffset_a, right, 0, 0, m3, 0, 0, new_size);
+  matrix_subtract(&b21, &b11, &right);
+  strassen(&a22, &right, &m4);
 
-  initialize_matrix(&m4, new_size, new_size);
-  matrix_subtract(matrix_b, new_offset_b, voffset_b, matrix_b, offset_b, voffset_b, right, 0, 0, new_size);
-  _strassen_algorithm(matrix_a, new_offset_a, new_voffset_a, right, 0, 0, m4, 0, 0, new_size);
+  matrix_add(&a11, &a12, &left);
+  strassen(&left, &b22, &m5);
 
-  initialize_matrix(&m5, new_size, new_size);
-  matrix_add(matrix_a, offset_a, voffset_a, matrix_a, offset_a, new_voffset_a, left, 0, 0, new_size);
-  _strassen_algorithm(left, 0, 0, matrix_b, new_offset_b, new_voffset_b, m5, 0, 0, new_size);
+  matrix_subtract(&a21, &a11, &left);
+  matrix_add(&b11, &b12, &right);
+  strassen(&left, &right, &m6);
 
-  initialize_matrix(&m6, new_size, new_size);
-  matrix_subtract(matrix_a, new_offset_a, voffset_a, matrix_a, offset_a, voffset_a, left, 0, 0, new_size);
-  matrix_add(matrix_b, offset_b, voffset_b, matrix_b, offset_b, new_voffset_b, right, 0, 0, new_size);
-  _strassen_algorithm(left, 0, 0, right, 0, 0, m6, 0, 0, new_size);
+  matrix_subtract(&a12, &a22, &left);
+  matrix_add(&b21, &b22, &right);
+  strassen(&left, &right, &m7);
 
-  initialize_matrix(&m7, new_size, new_size);
-  matrix_subtract(matrix_a, offset_a, new_voffset_a, matrix_a, new_offset_a, new_voffset_a, left, 0, 0, new_size);
-  matrix_add(matrix_b, new_offset_b, voffset_b, matrix_b, new_offset_b, new_voffset_b, right, 0, 0, new_size);
-  _strassen_algorithm(left, 0, 0, right, 0, 0, m7, 0, 0, new_size);
+  // Put results into C
+  matrix_add(&m1, &m4, &left);
+  matrix_subtract(&left, &m5, &right);
+  matrix_add(&right, &m7, &c11);
 
-  matrix_add(m1, 0, 0, m4, 0, 0, left, 0, 0, new_size);
-  matrix_subtract(left, 0, 0, m5, 0, 0, right, 0, 0, new_size);
-  matrix_add(right, 0, 0, m7, 0, 0, matrix_c, offset_c, voffset_c, new_size);
+  matrix_add(&m3, &m5, &c12);
 
-  matrix_add(m3, 0, 0, m5, 0, 0, matrix_c, offset_c, new_voffset_c, new_size);
+  matrix_add(&m2, &m4, &c21);
 
-  matrix_add(m2, 0, 0, m4, 0, 0, matrix_c, new_offset_c, voffset_c, new_size);
+  matrix_subtract(&m1, &m2, &left);
+  matrix_add(&left, &m3, &right);
+  matrix_add(&right, &m6, &c22);
 
-  matrix_subtract(m1, 0, 0, m2, 0, 0, left, 0, 0, new_size);
-  matrix_add(left, 0, 0, m3, 0, 0, right, 0, 0, new_size);
-  matrix_add(right, 0, 0, m6, 0, 0, matrix_c, new_offset_c, new_voffset_c, new_size);
-
-  free_matrix(left, new_size);
-  free_matrix(right, new_size);
-  free_matrix(m1, new_size);
-  free_matrix(m2, new_size);
-  free_matrix(m3, new_size);
-  free_matrix(m4, new_size);
-  free_matrix(m5, new_size);
-  free_matrix(m6, new_size);
-  free_matrix(m7, new_size);
-}
-
-void strassen_algorithm(int **matrix_a, int **matrix_b, int **matrix_c, size_t size) {
-  _strassen_algorithm(matrix_a, 0, 0, matrix_b, 0, 0, matrix_c, 0, 0, size);
+  free_matrix(&left);
+  free_matrix(&right);
+  free_matrix(&m1);
+  free_matrix(&m2);
+  free_matrix(&m3);
+  free_matrix(&m4);
+  free_matrix(&m5);
+  free_matrix(&m6);
+  free_matrix(&m7);
 }

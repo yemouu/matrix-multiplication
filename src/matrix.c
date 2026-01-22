@@ -3,66 +3,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "matrix.h"
+
 #define MATRIX_MIN_VALUE 1
 #define MATRIX_MAX_VALUE 100
 
-void initialize_matrix(int ***matrix, size_t rows, size_t columns) {
-  *matrix = calloc(rows, sizeof(int *));
-  if (*matrix == NULL) {
+Matrix initialize_matrix(size_t rows, size_t columns) {
+  Matrix matrix = {.values = (int *)malloc(rows * columns * sizeof(int)), .rows = rows, .columns = columns};
+
+  if (matrix.values == NULL) {
     fprintf(stderr, "Error: Failed to allocate memory");
     exit(1);
   }
 
-  for (size_t row = 0; row < rows; row++) {
-    (*matrix)[row] = calloc(columns, sizeof(int));
-    if ((*matrix)[row] == NULL) {
-      fprintf(stderr, "Error: Failed to allocate memory");
-      exit(1);
-    }
-
-    for (size_t column = 0; column < columns; column++)
-      (*matrix)[row][column] = 0;
-  }
+  return matrix;
 }
 
-void randomize_matrix(int **matrix, size_t rows, size_t columns) {
-  for (size_t row = 0; row < rows; row++)
-    for (size_t column = 0; column < columns; column++)
-      matrix[row][column] = rand() % (MATRIX_MAX_VALUE + 1) + MATRIX_MIN_VALUE;
+void randomize_matrix(Matrix *matrix) {
+  for (size_t index = 0; index < matrix->rows * matrix->columns; index++)
+    matrix->values[index] = rand() % (MATRIX_MAX_VALUE + 1) + MATRIX_MIN_VALUE;
 }
 
-void print_matrix(int **matrix, size_t rows, size_t columns) {
-  for (size_t row = 0; row < rows; row++) {
-    for (size_t column = 0; column < columns; column++) {
-      printf("%d\t", matrix[row][column]);
-    }
+void print_matrix(Matrix *matrix) {
+  for (size_t row = 0; row < matrix->rows; row++) {
+    for (size_t column = 0; column < matrix->columns; column++)
+      printf("%d\t", matrix->values[row * matrix->columns + column]);
 
     printf("\n");
   }
 }
 
-void multiply_matrices(int **matrix_a, size_t a_rows, int **matrix_b, size_t b_columns, size_t shared, int **result) {
-  for (size_t s = 0; s < shared; s++)
-    for (size_t row = 0; row < a_rows; row++)
-      for (size_t column = 0; column < b_columns; column++)
-        result[row][column] += matrix_a[row][s] * matrix_b[s][column];
+void multiply_matrices(Matrix *a, Matrix *b, Matrix *c) {
+  for (size_t lane = 0; lane < a->columns; lane++)
+    for (size_t row = 0; row < a->rows; row++)
+      for (size_t column = 0; column < b->columns; column++)
+        c->values[row * b->columns + column] +=
+            a->values[row * a->columns + lane] * b->values[lane * b->columns + column];
 }
 
-bool compare_matrices(int **matrix_a, int **matrix_b, size_t rows, size_t columns) {
-  for (size_t row = 0; row < rows; row++)
-    for (size_t column = 0; column < columns; column++)
-      if (matrix_a[row][column] != matrix_b[row][column])
-        return false;
+bool compare_matrices(Matrix *a, Matrix *b) {
+  if ((a->rows != b->rows) || (a->columns != b->columns))
+    return false;
+
+  for (size_t index = 0; index < (a->rows * a->columns); index++)
+    if (a->values[index] != b->values[index])
+      return false;
 
   return true;
 };
 
-void free_matrix(int **matrix, size_t rows) {
-  if (matrix == NULL)
+void free_matrix(Matrix *matrix) {
+  if (matrix->values == NULL)
     return;
 
-  for (size_t row = 0; row < rows; row++)
-    free(matrix[row]);
-
-  free(matrix);
+  free(matrix->values);
 }

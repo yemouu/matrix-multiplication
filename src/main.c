@@ -126,26 +126,25 @@ int main(int argc, char **argv) {
     printf("M: %zu, N: %zu, K: %zu\n\n", m, n, k);
   }
 
-  int **matrix_a = NULL, **matrix_b = NULL, **matrix_c = NULL, **matrix_d = NULL;
-
-  initialize_matrix(&matrix_a, m, k);
-  initialize_matrix(&matrix_b, k, n);
-  initialize_matrix(&matrix_c, m, n);
+  Matrix a, b, c, d;
+  a = initialize_matrix(m, k);
+  b = initialize_matrix(k, n);
+  c = initialize_matrix(m, n);
 
   if (algo != GEMM)
-    initialize_matrix(&matrix_d, m, n);
+    d = initialize_matrix(m, n);
 
   srand(time(NULL));
-  randomize_matrix(matrix_a, m, k);
-  randomize_matrix(matrix_b, k, n);
+  randomize_matrix(&a);
+  randomize_matrix(&b);
 
   if (debug) {
     printf("Matrix A:\n");
-    print_matrix(matrix_a, m, k);
+    print_matrix(&a);
     printf("\n");
 
     printf("Matrix B:\n");
-    print_matrix(matrix_b, k, n);
+    print_matrix(&b);
     printf("\n");
   }
 
@@ -153,7 +152,7 @@ int main(int argc, char **argv) {
   switch (algo) {
   case GEMM:
     begin = clock();
-    multiply_matrices(matrix_a, m, matrix_b, n, k, matrix_c);
+    multiply_matrices(&a, &b, &c);
     end = clock();
     break;
   case STRASSEN:
@@ -164,26 +163,8 @@ int main(int argc, char **argv) {
     }
 
     begin = clock();
-    strassen_algorithm(matrix_a, matrix_b, matrix_d, m);
+    strassen(&a, &b, &d);
     end = clock();
-
-    multiply_matrices(matrix_a, m, matrix_b, n, k, matrix_c);
-    if (!compare_matrices(matrix_c, matrix_d, m, n)) {
-      fprintf(stderr, "Error: Multiplication from strassen algorithm returned an unexpected result\n");
-
-      if (debug) {
-        printf("Matrix C:\n");
-        print_matrix(matrix_c, m, n);
-        printf("\n");
-
-        printf("Matrix D:\n");
-        print_matrix(matrix_d, m, n);
-        printf("\n");
-      }
-
-      return 1;
-    }
-
     break;
   case COPPERSMITH_WINOGRAD:
     begin = clock();
@@ -192,24 +173,31 @@ int main(int argc, char **argv) {
   }
 
   const double elapsed_time = (double)(end - begin) / CLOCKS_PER_SEC;
+  printf("Elapsed Time: %fs\n", elapsed_time);
 
   if (debug) {
+    if (algo != GEMM)
+      multiply_matrices(&a, &b, &c);
+
     printf("Matrix C:\n");
-    print_matrix(matrix_c, m, n);
+    print_matrix(&c);
     printf("\n");
 
     if (algo != GEMM) {
       printf("Matrix D:\n");
-      print_matrix(matrix_d, m, n);
+      print_matrix(&d);
       printf("\n");
+
+      if (!compare_matrices(&c, &d)) {
+        fprintf(stderr, "Error: Multiplication from alternative algorithm returned an unexpected result\n");
+        return 1;
+      }
     }
   }
 
-  printf("Elapsed Time: %fs\n", elapsed_time);
-
-  free_matrix(matrix_a, m);
-  free_matrix(matrix_b, k);
-  free_matrix(matrix_c, m);
+  free_matrix(&a);
+  free_matrix(&b);
+  free_matrix(&c);
 
   if (algo != GEMM)
     free_matrix(&d);

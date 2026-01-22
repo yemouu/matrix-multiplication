@@ -4,14 +4,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void initialize_matrix(int ***matrix, size_t rows, size_t columns);
-void randomize_matrix(int **matrix, size_t rows, size_t columns);
-void free_matrix(int **matrix, size_t rows);
+typedef struct {
+  int *values;
+  size_t rows;
+  size_t columns;
 
-void multiply_matrices(int **matrix_a, size_t a_rows, int **matrix_b, size_t b_columns, size_t shared, int **result);
+  size_t row_offset;
+  size_t row_offset_size;
+  size_t column_offset;
+  size_t column_offset_size;
+} Matrix;
 
-bool compare_matrices(int **matrix_a, int **matrix_b, size_t rows, size_t columns);
+Matrix initialize_matrix(size_t rows, size_t columns);
+void randomize_matrix(Matrix *matrix);
+void free_matrix(Matrix *matrix);
 
-void print_matrix(int **matrix, size_t rows, size_t columns);
+void multiply_matrices(Matrix *a, Matrix *b, Matrix *c);
+
+bool compare_matrices(Matrix *a, Matrix *b);
+
+void print_matrix(Matrix *matrix);
 
 #endif // matrix_h_INCLUDE

@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
-void strassen_algorithm(int **matrix_a, int **matrix_b, int **matrix_c, size_t size);
+#include "matrix.h"
+
+void strassen(Matrix *a, Matrix *b, Matrix *c);
 
 #endif // strassen_h_INCLUDED
