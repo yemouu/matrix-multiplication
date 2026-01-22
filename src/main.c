@@ -21,6 +21,7 @@ void usage_print(int exit_status) {
       "\t-a <algorithm> - select which algorithm to use (gemm [default], strassen, or coppersmith_winograd)\n"
       "\t-d             - enable debug prints\n"
       "\t-h             - display this message\n"
+      "\t-s <integer>   - set a value for m n and k (creates a square matrix)\n"
       "\t-k <integer>   - set a value for k (determines the size of the matrix)\n"
       "\t-m <integer>   - set a value for m (determines the size of the matrix)\n"
       "\t-n <integer>   - set a value for n (determines the size of the matrix)\n";
@@ -62,7 +63,7 @@ int main(int argc, char **argv) {
   size_t m = 512, n = 512, k = 512;
 
   int opt;
-  while ((opt = getopt(argc, argv, ":a:dhk:m:n:")) != -1) {
+  while ((opt = getopt(argc, argv, ":a:dhk:m:n:s:")) != -1) {
     switch (opt) {
     case 'a':
       if (strcmp(optarg, "gemm") == 0)
@@ -90,6 +91,11 @@ int main(int argc, char **argv) {
       break;
     case 'n':
       n = get_num_from_optarg(optarg);
+      break;
+    case 's':
+      k = get_num_from_optarg(optarg);
+      m = k;
+      n = k;
       break;
     case ':':
       fprintf(stderr, "Option -%c requires an operand\n", optopt);
