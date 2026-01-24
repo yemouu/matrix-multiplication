@@ -132,16 +132,16 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
   // const int m6 = (a21 - a11) * (b11 + b12);
   // const int m7 = (a12 - a22) * (b21 + b22);
 
-  // TODO: Try and combine these temporary matricies into one big matrix and use offsets to access each 'matrix'
-  Matrix left = initialize_matrix(size, size);
-  Matrix right = initialize_matrix(size, size);
-  Matrix m1 = initialize_matrix(size, size);
-  Matrix m2 = initialize_matrix(size, size);
-  Matrix m3 = initialize_matrix(size, size);
-  Matrix m4 = initialize_matrix(size, size);
-  Matrix m5 = initialize_matrix(size, size);
-  Matrix m6 = initialize_matrix(size, size);
-  Matrix m7 = initialize_matrix(size, size);
+  Matrix temp = initialize_matrix(size, 9 * size);
+  Matrix left = create_matrix_offset(&temp, 0, 0, size);
+  Matrix right = create_matrix_offset(&temp, 0, size, size);
+  Matrix m1 = create_matrix_offset(&temp, 0, 2 * size, size);
+  Matrix m2 = create_matrix_offset(&temp, 0, 3 * size, size);
+  Matrix m3 = create_matrix_offset(&temp, 0, 4 * size, size);
+  Matrix m4 = create_matrix_offset(&temp, 0, 5 * size, size);
+  Matrix m5 = create_matrix_offset(&temp, 0, 6 * size, size);
+  Matrix m6 = create_matrix_offset(&temp, 0, 7 * size, size);
+  Matrix m7 = create_matrix_offset(&temp, 0, 8 * size, size);
 
   // TODO: Instead of doing the addition and subtraction outside of the, consider making the addition and subtraction
   //       functions return a pointer to the result
@@ -182,13 +182,5 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
   matrix_add(&left, &m3, &right);
   matrix_add(&right, &m6, &c22);
 
-  free_matrix(&left);
-  free_matrix(&right);
-  free_matrix(&m1);
-  free_matrix(&m2);
-  free_matrix(&m3);
-  free_matrix(&m4);
-  free_matrix(&m5);
-  free_matrix(&m6);
-  free_matrix(&m7);
+  free_matrix(&temp);
 }
