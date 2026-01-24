@@ -97,12 +97,16 @@ void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
 }
 
 void strassen(Matrix *a, Matrix *b, Matrix *c) {
-  if (c->rows == 2) {
+  if (c->rows == 2 || c->row_offset_size == 2) {
     base_strassen(a, b, c);
     return;
   }
 
-  const size_t size = c->rows / 2;
+  size_t size;
+  if (c->row_offset_size != 0)
+    size = c->row_offset_size / 2;
+  else
+    size = c->rows / 2;
 
   Matrix a11 = create_matrix_offset(a, a->row_offset, a->column_offset, size);
   Matrix a12 = create_matrix_offset(a, a->row_offset, a->column_offset + size, size);
