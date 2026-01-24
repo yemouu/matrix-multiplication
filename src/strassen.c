@@ -20,7 +20,7 @@ void matrix_add(Matrix *a, Matrix *b, Matrix *c) {
   if (a->row_offset_size != 0)
     row_size = a->row_offset_size;
   else if (b->row_offset_size != 0)
-    row_size = a->row_offset_size;
+    row_size = b->row_offset_size;
   else if (c->row_offset_size != 0)
     row_size = c->row_offset_size;
   else
@@ -29,7 +29,7 @@ void matrix_add(Matrix *a, Matrix *b, Matrix *c) {
   if (a->column_offset_size != 0)
     column_size = a->column_offset_size;
   else if (b->column_offset_size != 0)
-    column_size = a->column_offset_size;
+    column_size = b->column_offset_size;
   else if (c->column_offset_size != 0)
     column_size = c->column_offset_size;
   else
@@ -49,7 +49,7 @@ void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
   if (a->row_offset_size != 0)
     row_size = a->row_offset_size;
   else if (b->row_offset_size != 0)
-    row_size = a->row_offset_size;
+    row_size = b->row_offset_size;
   else if (c->row_offset_size != 0)
     row_size = c->row_offset_size;
   else
@@ -58,7 +58,7 @@ void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
   if (a->column_offset_size != 0)
     column_size = a->column_offset_size;
   else if (b->column_offset_size != 0)
-    column_size = a->column_offset_size;
+    column_size = b->column_offset_size;
   else if (c->column_offset_size != 0)
     column_size = c->column_offset_size;
   else
