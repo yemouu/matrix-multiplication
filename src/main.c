@@ -7,13 +7,11 @@
 #include <string.h>
 #include <time.h>
 
+#include "matrix-common.h"
 #include "matrix.h"
 #include "strassen.h"
 
 typedef enum { GEMM, STRASSEN, COPPERSMITH_WINOGRAD } algorithm;
-
-// TODO: An improvement would be to have a matrix struct. This way the rows and columns are kept with the matrix itself
-//       instead of needing to be passed around
 
 void usage_print(int exit_status) {
   const char *usage =
@@ -152,7 +150,7 @@ int main(int argc, char **argv) {
   switch (algo) {
   case GEMM:
     begin = clock();
-    multiply_matrices(&a, &b, &c);
+    gemm(&a, &b, &c);
     end = clock();
     break;
   case STRASSEN:
@@ -177,7 +175,7 @@ int main(int argc, char **argv) {
 
   if (debug) {
     if (algo != GEMM)
-      multiply_matrices(&a, &b, &c);
+      gemm(&a, &b, &c);
 
     printf("Matrix C:\n");
     print_matrix(&c);
