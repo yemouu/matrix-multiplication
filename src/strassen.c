@@ -72,16 +72,15 @@ void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
 }
 
 void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
+  const int a11 = a->values[(a->row_offset) * a->columns + (a->column_offset)];
+  const int a12 = a->values[(a->row_offset) * a->columns + (a->column_offset + 1)];
+  const int a21 = a->values[(a->row_offset + 1) * a->columns + (a->column_offset)];
+  const int a22 = a->values[(a->row_offset + 1) * a->columns + (a->column_offset + 1)];
 
-  const int a11 = a->values[(a->row_offset) * a->rows + (a->column_offset)];
-  const int a12 = a->values[(a->row_offset) * a->rows + (a->column_offset + 1)];
-  const int a21 = a->values[(a->row_offset + 1) * a->rows + (a->column_offset)];
-  const int a22 = a->values[(a->row_offset + 1) * a->rows + (a->column_offset + 1)];
-
-  const int b11 = b->values[(b->row_offset) * b->rows + (b->column_offset)];
-  const int b12 = b->values[(b->row_offset) * b->rows + (b->column_offset + 1)];
-  const int b21 = b->values[(b->row_offset + 1) * b->rows + (b->column_offset)];
-  const int b22 = b->values[(b->row_offset + 1) * b->rows + (b->column_offset + 1)];
+  const int b11 = b->values[(b->row_offset) * b->columns + (b->column_offset)];
+  const int b12 = b->values[(b->row_offset) * b->columns + (b->column_offset + 1)];
+  const int b21 = b->values[(b->row_offset + 1) * b->columns + (b->column_offset)];
+  const int b22 = b->values[(b->row_offset + 1) * b->columns + (b->column_offset + 1)];
 
   const int m1 = (a11 + a22) * (b11 + b22);
   const int m2 = (a21 + a22) * b11;
@@ -91,10 +90,10 @@ void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
   const int m6 = (a21 - a11) * (b11 + b12);
   const int m7 = (a12 - a22) * (b21 + b22);
 
-  c->values[(c->row_offset) * c->rows + (c->column_offset)] = m1 + m4 - m5 + m7;
-  c->values[(c->row_offset) * c->rows + (c->column_offset + 1)] = m3 + m5;
-  c->values[(c->row_offset + 1) * c->rows + (c->column_offset)] = m2 + m4;
-  c->values[(c->row_offset + 1) * c->rows + (c->column_offset + 1)] = m1 - m2 + m3 + m6;
+  c->values[(c->row_offset) * c->columns + (c->column_offset)] = m1 + m4 - m5 + m7;
+  c->values[(c->row_offset) * c->columns + (c->column_offset + 1)] = m3 + m5;
+  c->values[(c->row_offset + 1) * c->columns + (c->column_offset)] = m2 + m4;
+  c->values[(c->row_offset + 1) * c->columns + (c->column_offset + 1)] = m1 - m2 + m3 + m6;
 }
 
 void strassen(Matrix *a, Matrix *b, Matrix *c) {
