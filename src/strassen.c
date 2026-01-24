@@ -13,7 +13,7 @@ Matrix create_matrix_offset(Matrix *matrix, size_t row_offset, size_t column_off
   return result;
 }
 
-void matrix_add(Matrix *a, Matrix *b, Matrix *c) {
+Matrix *matrix_add(Matrix *a, Matrix *b, Matrix *c) {
   size_t row_size = 0;
   size_t column_size = 0;
 
@@ -40,9 +40,11 @@ void matrix_add(Matrix *a, Matrix *b, Matrix *c) {
       c->values[(c->row_offset + row) * c->columns + (c->column_offset + column)] =
           a->values[(a->row_offset + row) * a->columns + (a->column_offset + column)] +
           b->values[(b->row_offset + row) * b->columns + (b->column_offset + column)];
+
+  return c;
 }
 
-void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
+Matrix *matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
   size_t row_size = 0;
   size_t column_size = 0;
 
@@ -69,6 +71,7 @@ void matrix_subtract(Matrix *a, Matrix *b, Matrix *c) {
       c->values[(c->row_offset + row) * c->columns + (c->column_offset + column)] =
           a->values[(a->row_offset + row) * a->columns + (a->column_offset + column)] -
           b->values[(b->row_offset + row) * b->columns + (b->column_offset + column)];
+  return c;
 }
 
 void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
@@ -123,18 +126,9 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
   Matrix c21 = create_matrix_offset(c, c->row_offset + size, c->column_offset, size);
   Matrix c22 = create_matrix_offset(c, c->row_offset + size, c->column_offset + size, size);
 
-  // TODO: Try and figure out a way to do this with less memory allocations
-  // const int m1 = (a11 + a22) * (b11 + b22);
-  // const int m2 = (a21 + a22) * b11;
-  // const int m3 = a11 * (b12 - b22);
-  // const int m4 = a22 * (b21 - b11);
-  // const int m5 = (a11 + a12) * b22;
-  // const int m6 = (a21 - a11) * (b11 + b12);
-  // const int m7 = (a12 - a22) * (b21 + b22);
-
   Matrix temp = initialize_matrix(size, 9 * size);
-  Matrix left = create_matrix_offset(&temp, 0, 0, size);
-  Matrix right = create_matrix_offset(&temp, 0, size, size);
+  Matrix o1 = create_matrix_offset(&temp, 0, 0, size);
+  Matrix o2 = create_matrix_offset(&temp, 0, size, size);
   Matrix m1 = create_matrix_offset(&temp, 0, 2 * size, size);
   Matrix m2 = create_matrix_offset(&temp, 0, 3 * size, size);
   Matrix m3 = create_matrix_offset(&temp, 0, 4 * size, size);
@@ -143,44 +137,20 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
   Matrix m6 = create_matrix_offset(&temp, 0, 7 * size, size);
   Matrix m7 = create_matrix_offset(&temp, 0, 8 * size, size);
 
-  // TODO: Instead of doing the addition and subtraction outside of the, consider making the addition and subtraction
-  //       functions return a pointer to the result
-  matrix_add(&a11, &a22, &left);
-  matrix_add(&b11, &b22, &right);
-  strassen(&left, &right, &m1);
+  // Calculate m1-m7
+  strassen(matrix_add(&a11, &a22, &o1), matrix_add(&b11, &b22, &o2), &m1);
+  strassen(matrix_add(&a21, &a22, &o1), &b11, &m2);
+  strassen(&a11, matrix_subtract(&b12, &b22, &o2), &m3);
+  strassen(&a22, matrix_subtract(&b21, &b11, &o2), &m4);
+  strassen(matrix_add(&a11, &a12, &o1), &b22, &m5);
+  strassen(matrix_subtract(&a21, &a11, &o1), matrix_add(&b11, &b12, &o2), &m6);
+  strassen(matrix_subtract(&a12, &a22, &o1), matrix_add(&b21, &b22, &o2), &m7);
 
-  matrix_add(&a21, &a22, &left);
-  strassen(&left, &b11, &m2);
-
-  matrix_subtract(&b12, &b22, &right);
-  strassen(&a11, &right, &m3);
-
-  matrix_subtract(&b21, &b11, &right);
-  strassen(&a22, &right, &m4);
-
-  matrix_add(&a11, &a12, &left);
-  strassen(&left, &b22, &m5);
-
-  matrix_subtract(&a21, &a11, &left);
-  matrix_add(&b11, &b12, &right);
-  strassen(&left, &right, &m6);
-
-  matrix_subtract(&a12, &a22, &left);
-  matrix_add(&b21, &b22, &right);
-  strassen(&left, &right, &m7);
-
-  // Put results into C
-  matrix_add(&m1, &m4, &left);
-  matrix_subtract(&left, &m5, &right);
-  matrix_add(&right, &m7, &c11);
-
+  // Calculate C11-C22
+  matrix_add(matrix_subtract(matrix_add(&m1, &m4, &o1), &m5, &o2), &m7, &c11);
   matrix_add(&m3, &m5, &c12);
-
   matrix_add(&m2, &m4, &c21);
-
-  matrix_subtract(&m1, &m2, &left);
-  matrix_add(&left, &m3, &right);
-  matrix_add(&right, &m6, &c22);
+  matrix_add(matrix_add(matrix_subtract(&m1, &m2, &o1), &m3, &o2), &m6, &c22);
 
   free_matrix(&temp);
 }
