@@ -2,7 +2,7 @@
 
 #include "matrix-common.h"
 
-void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
+inline void base_strassen(Matrix *a, Matrix *b, Matrix *c) {
   const int a11 = a->values[(a->row_offset) * a->columns + (a->column_offset)];
   const int a12 = a->values[(a->row_offset) * a->columns + (a->column_offset + 1)];
   const int a21 = a->values[(a->row_offset + 1) * a->columns + (a->column_offset)];
@@ -33,11 +33,7 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
     return;
   }
 
-  size_t size;
-  if (c->row_offset_size != 0)
-    size = c->row_offset_size / 2;
-  else
-    size = c->rows / 2;
+  const size_t size = (c->row_offset_size != 0) ? (c->row_offset_size / 2) : (c->rows / 2);
 
   Matrix a11 = create_matrix_offset(a, a->row_offset, a->column_offset, size);
   Matrix a12 = create_matrix_offset(a, a->row_offset, a->column_offset + size, size);
@@ -66,19 +62,42 @@ void strassen(Matrix *a, Matrix *b, Matrix *c) {
   Matrix m7 = create_matrix_offset(&temp, 0, 8 * size, size);
 
   // Calculate m1-m7
-  strassen(matrix_add(&a11, &a22, &o1), matrix_add(&b11, &b22, &o2), &m1);
-  strassen(matrix_add(&a21, &a22, &o1), &b11, &m2);
-  strassen(&a11, matrix_subtract(&b12, &b22, &o2), &m3);
-  strassen(&a22, matrix_subtract(&b21, &b11, &o2), &m4);
-  strassen(matrix_add(&a11, &a12, &o1), &b22, &m5);
-  strassen(matrix_subtract(&a21, &a11, &o1), matrix_add(&b11, &b12, &o2), &m6);
-  strassen(matrix_subtract(&a12, &a22, &o1), matrix_add(&b21, &b22, &o2), &m7);
+  matrix_add(&a11, &a22, &o1);
+  matrix_add(&b11, &b22, &o2);
+  strassen(&o1, &o2, &m1);
+
+  matrix_add(&a21, &a22, &o1);
+  strassen(&o1, &b11, &m2);
+
+  matrix_subtract(&b12, &b22, &o2);
+  strassen(&a11, &o2, &m3);
+
+  matrix_subtract(&b21, &b11, &o2);
+  strassen(&a22, &o2, &m4);
+
+  matrix_add(&a11, &a12, &o1);
+  strassen(&o1, &b22, &m5);
+
+  matrix_subtract(&a21, &a11, &o1);
+  matrix_add(&b11, &b12, &o2);
+  strassen(&o1, &o2, &m6);
+
+  matrix_subtract(&a12, &a22, &o1);
+  matrix_add(&b21, &b22, &o2);
+  strassen(&o1, &o2, &m7);
 
   // Calculate C11-C22
-  matrix_add(matrix_subtract(matrix_add(&m1, &m4, &o1), &m5, &o2), &m7, &c11);
+  matrix_add(&m1, &m4, &o1);
+  matrix_subtract(&o1, &m5, &o2);
+  matrix_add(&o2, &m7, &c11);
+
   matrix_add(&m3, &m5, &c12);
+
   matrix_add(&m2, &m4, &c21);
-  matrix_add(matrix_add(matrix_subtract(&m1, &m2, &o1), &m3, &o2), &m6, &c22);
+
+  matrix_subtract(&m1, &m2, &o1);
+  matrix_add(&o1, &m3, &o2);
+  matrix_add(&o2, &m6, &c22);
 
   free_matrix(&temp);
 }

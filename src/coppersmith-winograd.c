@@ -2,7 +2,7 @@
 
 #include "matrix-common.h"
 
-void base_coppersmith_winograd(Matrix *a, Matrix *b, Matrix *c) {
+inline void base_coppersmith_winograd(Matrix *a, Matrix *b, Matrix *c) {
   const int a11 = a->values[(a->row_offset) * a->columns + (a->column_offset)];
   const int a12 = a->values[(a->row_offset) * a->columns + (a->column_offset + 1)];
   const int a21 = a->values[(a->row_offset + 1) * a->columns + (a->column_offset)];
