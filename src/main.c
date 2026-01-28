@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "coppersmith-winograd.h"
 #include "matrix-common.h"
 #include "matrix.h"
 #include "strassen.h"
@@ -165,7 +166,14 @@ int main(int argc, char **argv) {
     end = clock();
     break;
   case COPPERSMITH_WINOGRAD:
+    if ((m != n || m != k) && ((m & (m - 1)) == 0)) {
+      fprintf(stderr, "For the Coppersmith-Winograd algorithm, the matrices should be the"
+                      "same size and m, n, and k should be a power of 2.\n");
+      return 1;
+    }
+
     begin = clock();
+    coppersmith_winograd(&a, &b, &d);
     end = clock();
     break;
   }
