@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     end = clock();
     break;
   case STRASSEN:
-    if ((m != n || m != k) && ((m & (m - 1)) == 0)) {
+    if ((m != n) || (m != k) || ((m & (m - 1)) != 0)) {
       fprintf(stderr, "For the Strassen algorithm, the matrices should be the"
                       "same size and m, n, and k should be a power of 2.\n");
       return 1;
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
     end = clock();
     break;
   case COPPERSMITH_WINOGRAD:
-    if ((m != n || m != k) && ((m & (m - 1)) == 0)) {
+    if ((m != n) || (m != k) || ((m & (m - 1)) != 0)) {
       fprintf(stderr, "For the Coppersmith-Winograd algorithm, the matrices should be the"
                       "same size and m, n, and k should be a power of 2.\n");
       return 1;
