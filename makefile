@@ -1,7 +1,7 @@
 .POSIX:
 CC = cc
 INCLUDE_FLAGS = -Iinclude
-CFLAGS += -Werror -Wall -Wextra $(INCLUDE_FLAGS)
+CFLAGS = -Os -Werror -Wall -Wextra $(INCLUDE_FLAGS)
 
 matrix-multiplication: src/main.o src/coppersmith-winograd.o src/matrix-common.o src/matrix.o src/strassen.o
 	$(CC) $(CFLAGS) -o matrix-multiplication src/main.o src/coppersmith-winograd.o src/matrix-common.o src/matrix.o src/strassen.o
